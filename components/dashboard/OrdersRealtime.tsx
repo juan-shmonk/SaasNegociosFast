@@ -89,8 +89,13 @@ export default function OrdersRealtime({ businessId, initialOrders }: Props) {
           <p className="font-semibold truncate">{order.cliente_nombre}</p>
           <p className="text-sm text-gray-500 break-words">📍 {order.ubicacion}</p>
           {order.cliente_tel && (
-            <a href={`tel:${order.cliente_tel}`} className="text-xs text-brand-600">
-              📞 {order.cliente_tel}
+            <a
+              href={`https://wa.me/${order.cliente_tel.replace(/\D/g, '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-xs text-green-600 hover:underline"
+            >
+              💬 {order.cliente_tel}
             </a>
           )}
         </div>
