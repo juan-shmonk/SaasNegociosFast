@@ -17,18 +17,24 @@ export default function LoginPage() {
     setLoading(true)
     setError('')
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    if (error) {
-      setError('Correo o contraseña incorrectos')
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({ email, password })
+    if (authError) {
+      setError(`Auth: ${authError.message}`)
       setLoading(false)
       return
     }
 
-    const { data: profile } = await supabase
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
       .select('role')
-      .eq('email', email)
+      .eq('id', authData.user.id)
       .single()
+
+    if (profileError) {
+      setError(`Perfil: ${profileError.message}`)
+      setLoading(false)
+      return
+    }
 
     router.push(profile?.role === 'super_admin' ? '/admin' : '/dashboard')
   }
