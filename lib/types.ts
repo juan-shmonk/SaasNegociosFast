@@ -27,6 +27,7 @@ export interface Business {
   horario: string | null
   plan_id: string | null
   activo: boolean
+  tienda_abierta: boolean
   created_at: string
   plans?: Plan
   profiles?: Profile

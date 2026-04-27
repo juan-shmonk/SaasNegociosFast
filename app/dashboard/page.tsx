@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import TiendaToggle from '@/components/dashboard/TiendaToggle'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -8,7 +9,7 @@ export default async function DashboardPage() {
 
   const { data: business } = await supabase
     .from('businesses')
-    .select('id, nombre')
+    .select('id, nombre, tienda_abierta')
     .eq('owner_id', user.id)
     .single()
 
@@ -44,6 +45,10 @@ export default async function DashboardPage() {
   return (
     <div>
       <h1 className="text-2xl md:text-3xl font-bold mb-6">Bienvenido, {business.nombre}</h1>
+
+      <div className="mb-6">
+        <TiendaToggle businessId={business.id} initialAbierta={business.tienda_abierta ?? true} />
+      </div>
 
       <div className="grid grid-cols-2 gap-3 md:gap-4 mb-6">
         {stats.map(s => (

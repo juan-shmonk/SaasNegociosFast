@@ -12,15 +12,15 @@ interface Props {
 export default function Storefront({ business, initialProducts }: Props) {
   const supabase = createClient()
   const [products, setProducts] = useState(initialProducts)
+  const [tiendaAbierta, setTiendaAbierta] = useState(business.tienda_abierta ?? true)
   const [cart, setCart] = useState<CartItem[]>([])
   const [step, setStep] = useState<'menu' | 'checkout' | 'done'>('menu')
   const [form, setForm] = useState({ nombre: '', telefono: '', ubicacion: '' })
   const [loading, setLoading] = useState(false)
   const [orderError, setOrderError] = useState('')
 
-  // Stock en tiempo real
   useEffect(() => {
-    const channel = supabase
+    const productChannel = supabase
       .channel(`stock-${business.id}`)
       .on('postgres_changes', {
         event: 'UPDATE',
@@ -31,14 +31,30 @@ export default function Storefront({ business, initialProducts }: Props) {
         setProducts(prev =>
           prev.map(p => p.id === payload.new.id ? { ...p, ...payload.new } as Product : p)
         )
-        // Si el producto se agotó, quitarlo del carrito
         if (!payload.new.tiene_stock) {
           setCart(prev => prev.filter(c => c.product.id !== payload.new.id))
         }
       })
       .subscribe()
 
-    return () => { supabase.removeChannel(channel) }
+    const businessChannel = supabase
+      .channel(`business-status-${business.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'businesses',
+        filter: `id=eq.${business.id}`,
+      }, (payload) => {
+        if (typeof payload.new.tienda_abierta === 'boolean') {
+          setTiendaAbierta(payload.new.tienda_abierta)
+        }
+      })
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(productChannel)
+      supabase.removeChannel(businessChannel)
+    }
   }, [business.id])
 
   function addToCart(product: Product) {
@@ -94,6 +110,60 @@ export default function Storefront({ business, initialProducts }: Props) {
   }
 
   const cartQty = (id: string) => cart.find(c => c.product.id === id)?.cantidad ?? 0
+
+  if (!tiendaAbierta) {
+    return (
+      <main className="min-h-screen flex flex-col" style={{ backgroundColor: business.color_primario + '08' }}>
+        {/* Header igual al normal */}
+        <div className="text-white py-6 md:py-8 px-4 text-center" style={{ backgroundColor: business.color_primario }}>
+          {business.logo_url && (
+            <img src={business.logo_url} alt={business.nombre}
+              className="w-16 h-16 md:w-20 md:h-20 rounded-full mx-auto mb-3 object-cover border-2 border-white/30" />
+          )}
+          <h1 className="text-xl md:text-2xl font-bold">{business.nombre}</h1>
+          {business.horario && <p className="text-white/60 text-xs mt-2">🕐 {business.horario}</p>}
+        </div>
+
+        {/* Pantalla de agotado */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6 py-16 text-center">
+          <style>{`
+            @keyframes float {
+              0%, 100% { transform: translateY(0px) rotate(-5deg); }
+              50%       { transform: translateY(-18px) rotate(5deg); }
+            }
+            @keyframes fadeUp {
+              from { opacity: 0; transform: translateY(16px); }
+              to   { opacity: 1; transform: translateY(0); }
+            }
+            .emoji-float { animation: float 2.4s ease-in-out infinite; }
+            .fade-up     { animation: fadeUp 0.6s ease both; }
+            .fade-up-2   { animation: fadeUp 0.6s ease 0.15s both; }
+            .fade-up-3   { animation: fadeUp 0.6s ease 0.3s both; }
+          `}</style>
+
+          <span className="text-8xl emoji-float select-none">🧺</span>
+
+          <h2 className="text-2xl font-bold text-gray-700 mt-8 mb-2 fade-up">
+            ¡Por hoy ya no hay!
+          </h2>
+          <p className="text-gray-400 text-sm max-w-xs leading-relaxed fade-up-2">
+            Los productos se agotaron. Vuelve pronto para hacer tu pedido.
+          </p>
+
+          {/* Tres puntos animados */}
+          <div className="flex gap-2 mt-8 fade-up-3">
+            {[0, 150, 300].map(delay => (
+              <span
+                key={delay}
+                className="w-2.5 h-2.5 rounded-full animate-bounce"
+                style={{ backgroundColor: business.color_primario, animationDelay: `${delay}ms` }}
+              />
+            ))}
+          </div>
+        </div>
+      </main>
+    )
+  }
 
   if (step === 'done') {
     return (
