@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import type { Business } from '@/lib/types'
 
 export default function ConfiguracionPage() {
   const supabase = createClient()
-  const [business, setBusiness] = useState<any>(null)
+  const [business, setBusiness] = useState<Business | null>(null)
   const [form, setForm] = useState({ nombre: '', descripcion: '', horario: '', color_primario: '#a855f7' })
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)

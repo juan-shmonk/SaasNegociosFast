@@ -11,8 +11,6 @@ export default function NuevoNegocioPage() {
   const [form, setForm] = useState({
     nombre: '',
     slug: '',
-    email_owner: '',
-    password_owner: '',
     descripcion: '',
     color_primario: '#a855f7',
   })
@@ -33,17 +31,6 @@ export default function NuevoNegocioPage() {
     setLoading(true)
     setError('')
 
-    // 1. Crear usuario owner en Supabase Auth
-    const { data: authData, error: authErr } = await supabase.auth.admin
-      ? { data: null, error: new Error('usa service role') }
-      : { data: null, error: new Error('usa service role') }
-
-    // Nota: la creación de usuarios desde el cliente requiere Service Role.
-    // En producción, crea una API Route en /app/api/admin/crear-negocio/route.ts
-    // que use el service role key server-side.
-    // Por ahora el owner se registra con el link de invitación de Supabase Auth.
-
-    // 2. Crear el negocio (el owner_id se enlaza después del primer login del owner)
     const { error: bizErr } = await supabase.from('businesses').insert({
       nombre: form.nombre,
       slug: form.slug,
