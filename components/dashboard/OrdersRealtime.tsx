@@ -87,7 +87,7 @@ export default function OrdersRealtime({ businessId, initialOrders }: Props) {
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-semibold truncate">{order.cliente_nombre}</p>
-          <p className="text-sm text-gray-500 truncate">📍 {order.ubicacion}</p>
+          <p className="text-sm text-gray-500 break-words">📍 {order.ubicacion}</p>
           {order.cliente_tel && (
             <a href={`tel:${order.cliente_tel}`} className="text-xs text-brand-600">
               📞 {order.cliente_tel}
