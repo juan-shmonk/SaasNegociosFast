@@ -48,7 +48,6 @@ export default function StockManager({ businessId, initialProducts }: Props) {
       stock_ilimitado: newProduct.stock_ilimitado,
       disponible: true,
     }).select().single()
-
     if (data) setProducts(prev => [...prev, data as Product])
     setNewProduct({ nombre: '', precio: '', descripcion: '', stock: '0', stock_ilimitado: false })
     setShowForm(false)
@@ -62,27 +61,25 @@ export default function StockManager({ businessId, initialProducts }: Props) {
   }
 
   const stockBadge = (p: Product) => {
-    if (p.stock_ilimitado) return <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full">∞ Ilimitado</span>
-    if (p.stock === 0) return <span className="text-xs px-2 py-0.5 bg-red-100 text-red-600 rounded-full">Agotado</span>
-    if (p.stock <= 3) return <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full">Últimas {p.stock}</span>
-    return <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full">{p.stock} en stock</span>
+    if (p.stock_ilimitado) return <span className="text-xs px-2 py-0.5 bg-blue-100 text-blue-700 rounded-full whitespace-nowrap">∞ Ilimitado</span>
+    if (p.stock === 0)     return <span className="text-xs px-2 py-0.5 bg-red-100 text-red-600 rounded-full whitespace-nowrap">Agotado</span>
+    if (p.stock <= 3)      return <span className="text-xs px-2 py-0.5 bg-yellow-100 text-yellow-700 rounded-full whitespace-nowrap">Últimas {p.stock}</span>
+    return <span className="text-xs px-2 py-0.5 bg-green-100 text-green-700 rounded-full whitespace-nowrap">{p.stock} en stock</span>
   }
 
   return (
     <div className="flex flex-col gap-4">
       <div className="flex justify-end">
-        <button
-          onClick={() => setShowForm(v => !v)}
-          className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm hover:bg-brand-700 transition"
-        >
+        <button onClick={() => setShowForm(v => !v)}
+          className="px-4 py-2 bg-brand-600 text-white rounded-lg text-sm hover:bg-brand-700 transition">
           {showForm ? 'Cancelar' : '+ Agregar producto'}
         </button>
       </div>
 
       {showForm && (
-        <form onSubmit={createProduct} className="bg-white rounded-2xl shadow p-6 flex flex-col gap-3">
+        <form onSubmit={createProduct} className="bg-white rounded-2xl shadow p-4 md:p-6 flex flex-col gap-3">
           <h3 className="font-semibold">Nuevo producto</h3>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <input required placeholder="Nombre" value={newProduct.nombre}
               onChange={e => setNewProduct(p => ({ ...p, nombre: e.target.value }))}
               className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
@@ -93,7 +90,7 @@ export default function StockManager({ businessId, initialProducts }: Props) {
           <input placeholder="Descripción (opcional)" value={newProduct.descripcion}
             onChange={e => setNewProduct(p => ({ ...p, descripcion: e.target.value }))}
             className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500" />
-          <div className="flex items-center gap-4">
+          <div className="flex flex-wrap items-center gap-4">
             <label className="flex items-center gap-2 text-sm">
               <input type="checkbox" checked={newProduct.stock_ilimitado}
                 onChange={e => setNewProduct(p => ({ ...p, stock_ilimitado: e.target.checked }))} />
@@ -112,7 +109,52 @@ export default function StockManager({ businessId, initialProducts }: Props) {
         </form>
       )}
 
-      <div className="bg-white rounded-2xl shadow overflow-hidden">
+      {/* ── Vista móvil: tarjetas ─────────────────────────── */}
+      <div className="flex flex-col gap-3 md:hidden">
+        {products.map(p => (
+          <div key={p.id} className="bg-white rounded-xl shadow-sm p-4 flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-2">
+              <div className="min-w-0">
+                <p className="font-semibold truncate">{p.nombre}</p>
+                {p.descripcion && <p className="text-xs text-gray-400 truncate">{p.descripcion}</p>}
+                <p className="text-sm font-bold text-brand-700 mt-0.5">${p.precio}</p>
+              </div>
+              <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                {stockBadge(p)}
+                <button onClick={() => toggleDisponible(p.id, p.disponible)}
+                  className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors mt-1 ${p.disponible ? 'bg-brand-600' : 'bg-gray-300'}`}>
+                  <span className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform ${p.disponible ? 'translate-x-5' : 'translate-x-1'}`} />
+                </button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between border-t border-gray-100 pt-2">
+              {p.stock_ilimitado ? (
+                <button onClick={() => toggleIlimitado(p.id, true)}
+                  className="text-xs text-blue-600 hover:underline">Quitar ilimitado</button>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <button onClick={() => adjustStock(p.id, -1)}
+                    className="w-7 h-7 rounded-full border border-gray-300 hover:bg-gray-100 font-bold text-sm flex items-center justify-center">−</button>
+                  <span className="w-6 text-center font-semibold text-sm">{p.stock}</span>
+                  <button onClick={() => adjustStock(p.id, 1)}
+                    className="w-7 h-7 rounded-full border border-gray-300 hover:bg-gray-100 font-bold text-sm flex items-center justify-center">+</button>
+                  <button onClick={() => toggleIlimitado(p.id, false)}
+                    className="text-xs text-blue-600 hover:underline ml-1">∞</button>
+                </div>
+              )}
+              <button onClick={() => deleteProduct(p.id)}
+                className="text-red-400 hover:text-red-600 text-xs">Eliminar</button>
+            </div>
+          </div>
+        ))}
+        {products.length === 0 && (
+          <p className="text-center text-gray-400 py-8">Sin productos. Agrega el primero.</p>
+        )}
+      </div>
+
+      {/* ── Vista escritorio: tabla ───────────────────────── */}
+      <div className="hidden md:block bg-white rounded-2xl shadow overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-gray-50 text-gray-500 uppercase text-xs">
             <tr>
@@ -121,7 +163,7 @@ export default function StockManager({ businessId, initialProducts }: Props) {
               <th className="px-4 py-3 text-left">Stock</th>
               <th className="px-4 py-3 text-left">Ajustar</th>
               <th className="px-4 py-3 text-left">Visible</th>
-              <th className="px-4 py-3 text-left"></th>
+              <th className="px-4 py-3"></th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-100">
@@ -135,25 +177,13 @@ export default function StockManager({ businessId, initialProducts }: Props) {
                 <td className="px-4 py-3">{stockBadge(p)}</td>
                 <td className="px-4 py-3">
                   {p.stock_ilimitado ? (
-                    <button onClick={() => toggleIlimitado(p.id, p.stock_ilimitado)}
-                      className="text-xs text-blue-600 hover:underline">
-                      Quitar ilimitado
-                    </button>
+                    <button onClick={() => toggleIlimitado(p.id, true)} className="text-xs text-blue-600 hover:underline">Quitar ilimitado</button>
                   ) : (
                     <div className="flex items-center gap-2">
-                      <button onClick={() => adjustStock(p.id, -1)}
-                        className="w-7 h-7 rounded-full border border-gray-300 hover:bg-gray-100 transition font-bold">
-                        −
-                      </button>
+                      <button onClick={() => adjustStock(p.id, -1)} className="w-7 h-7 rounded-full border border-gray-300 hover:bg-gray-100 font-bold flex items-center justify-center">−</button>
                       <span className="w-6 text-center font-semibold">{p.stock}</span>
-                      <button onClick={() => adjustStock(p.id, 1)}
-                        className="w-7 h-7 rounded-full border border-gray-300 hover:bg-gray-100 transition font-bold">
-                        +
-                      </button>
-                      <button onClick={() => toggleIlimitado(p.id, p.stock_ilimitado)}
-                        className="text-xs text-blue-600 hover:underline ml-1">
-                        ∞
-                      </button>
+                      <button onClick={() => adjustStock(p.id, 1)} className="w-7 h-7 rounded-full border border-gray-300 hover:bg-gray-100 font-bold flex items-center justify-center">+</button>
+                      <button onClick={() => toggleIlimitado(p.id, false)} className="text-xs text-blue-600 hover:underline ml-1">∞</button>
                     </div>
                   )}
                 </td>
@@ -164,14 +194,12 @@ export default function StockManager({ businessId, initialProducts }: Props) {
                   </button>
                 </td>
                 <td className="px-4 py-3">
-                  <button onClick={() => deleteProduct(p.id)} className="text-red-400 hover:text-red-600 text-xs">
-                    Eliminar
-                  </button>
+                  <button onClick={() => deleteProduct(p.id)} className="text-red-400 hover:text-red-600 text-xs">Eliminar</button>
                 </td>
               </tr>
             ))}
             {products.length === 0 && (
-              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Sin productos. Agrega el primero.</td></tr>
+              <tr><td colSpan={6} className="px-4 py-8 text-center text-gray-400">Sin productos.</td></tr>
             )}
           </tbody>
         </table>

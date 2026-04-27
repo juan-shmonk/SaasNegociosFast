@@ -115,12 +115,12 @@ export default function Storefront({ business, initialProducts }: Props) {
   return (
     <main className="min-h-screen pb-32" style={{ backgroundColor: business.color_primario + '08' }}>
       {/* Header */}
-      <div className="text-white py-8 px-4 text-center" style={{ backgroundColor: business.color_primario }}>
+      <div className="text-white py-6 md:py-8 px-4 text-center" style={{ backgroundColor: business.color_primario }}>
         {business.logo_url && (
           <img src={business.logo_url} alt={business.nombre}
-            className="w-20 h-20 rounded-full mx-auto mb-3 object-cover border-2 border-white/30" />
+            className="w-16 h-16 md:w-20 md:h-20 rounded-full mx-auto mb-3 object-cover border-2 border-white/30" />
         )}
-        <h1 className="text-2xl font-bold">{business.nombre}</h1>
+        <h1 className="text-xl md:text-2xl font-bold">{business.nombre}</h1>
         {business.descripcion && <p className="text-white/80 text-sm mt-1 max-w-xs mx-auto">{business.descripcion}</p>}
         {business.horario && <p className="text-white/60 text-xs mt-2">🕐 {business.horario}</p>}
       </div>

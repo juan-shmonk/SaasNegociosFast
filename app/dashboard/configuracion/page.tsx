@@ -47,7 +47,7 @@ export default function ConfiguracionPage() {
 
   return (
     <div className="max-w-lg">
-      <h1 className="text-3xl font-bold mb-8">Configuración de tu tienda</h1>
+      <h1 className="text-2xl md:text-3xl font-bold mb-6">Configuración de tu tienda</h1>
 
       <form onSubmit={handleSave} className="bg-white rounded-2xl shadow p-6 flex flex-col gap-5">
         <label className="flex flex-col gap-1 text-sm font-medium">
